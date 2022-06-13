@@ -2,6 +2,7 @@ package jm.task.core.jdbc.dao;
 
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -31,7 +32,7 @@ public class UserDaoHibernateImpl implements UserDao {
                     "                            PRIMARY KEY (id))").executeUpdate();
 
             session.getTransaction().commit();
-        }catch (Exception e){
+        }catch (HibernateException e){
             e.printStackTrace();
         }
 
@@ -48,7 +49,7 @@ public class UserDaoHibernateImpl implements UserDao {
             session.createSQLQuery("DROP TABLE IF EXISTS User").executeUpdate();
             session.getTransaction().commit();
 
-        }catch (Exception e){
+        }catch (HibernateException e){
             e.printStackTrace();
         }
     }
@@ -64,7 +65,7 @@ public class UserDaoHibernateImpl implements UserDao {
             session.getTransaction().commit();
             System.out.println("User с именем – " + name + " добавлен в базу данных");
 
-        }catch (Exception e){
+        }catch (HibernateException e){
             e.printStackTrace();
         }
     }
@@ -79,7 +80,7 @@ public class UserDaoHibernateImpl implements UserDao {
             session.delete(new User((byte) id));
             session.getTransaction().commit();
 
-        }catch (Exception e){
+        }catch (HibernateException e){
             e.printStackTrace();
         }
 
@@ -98,13 +99,12 @@ public class UserDaoHibernateImpl implements UserDao {
 
             return users;
 
-        }catch (Exception e){
+        }catch (HibernateException e){
             e.printStackTrace();
         }
 
         return null;
     }
-
 
     @Override
     public void cleanUsersTable() {
