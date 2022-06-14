@@ -5,6 +5,7 @@ import jm.task.core.jdbc.util.Util;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
 import java.util.List;
@@ -12,6 +13,8 @@ import java.util.List;
 public class UserDaoHibernateImpl implements UserDao {
 
     private static final SessionFactory SESSION_FACTORY = Util.getSessionFactory();
+    private Transaction transactional;;
+
     public UserDaoHibernateImpl() {
 
     }
@@ -19,10 +22,10 @@ public class UserDaoHibernateImpl implements UserDao {
     @Override
     public void createUsersTable() {
 
-        try{
+        try(Session session = SESSION_FACTORY.getCurrentSession()){
 
-            Session session = SESSION_FACTORY.getCurrentSession();
             session.beginTransaction();
+            transactional = session.beginTransaction();
 
             session.createSQLQuery("CREATE TABLE IF NOT EXISTS User (\n" +
                     "                            id bigint AUTO_INCREMENT,\n" +
@@ -33,23 +36,24 @@ public class UserDaoHibernateImpl implements UserDao {
 
             session.getTransaction().commit();
         }catch (HibernateException e){
+            transactional.rollback();
             e.printStackTrace();
         }
-
 
     }
 
     @Override
     public void dropUsersTable() {
 
-        try {
+        try(Session session = SESSION_FACTORY.getCurrentSession()) {
 
-            Session session = SESSION_FACTORY.getCurrentSession();
+            transactional = session.beginTransaction();
             session.beginTransaction();
             session.createSQLQuery("DROP TABLE IF EXISTS User").executeUpdate();
             session.getTransaction().commit();
 
         }catch (HibernateException e){
+            transactional.rollback();
             e.printStackTrace();
         }
     }
@@ -57,15 +61,16 @@ public class UserDaoHibernateImpl implements UserDao {
     @Override
     public void saveUser(String name, String lastName, byte age) {
 
-        try {
+        try(Session session = SESSION_FACTORY.getCurrentSession()) {
 
-            Session session = SESSION_FACTORY.getCurrentSession();
+            transactional = session.beginTransaction();
             session.beginTransaction();
             session.save(new User(name, lastName, age));
             session.getTransaction().commit();
             System.out.println("User с именем – " + name + " добавлен в базу данных");
 
         }catch (HibernateException e){
+            transactional.rollback();
             e.printStackTrace();
         }
     }
@@ -73,14 +78,15 @@ public class UserDaoHibernateImpl implements UserDao {
     @Override
     public void removeUserById(long id) {
 
-        try {
+        try(Session session = SESSION_FACTORY.getCurrentSession()) {
 
-            Session session = SESSION_FACTORY.getCurrentSession();
+            transactional = session.beginTransaction();
             session.beginTransaction();
             session.delete(new User((byte) id));
             session.getTransaction().commit();
 
         }catch (HibernateException e){
+            transactional.rollback();
             e.printStackTrace();
         }
 
@@ -89,9 +95,9 @@ public class UserDaoHibernateImpl implements UserDao {
     @Override
     public List<User> getAllUsers() {
 
-        try {
+        try(Session session = SESSION_FACTORY.getCurrentSession()) {
 
-            Session session = SESSION_FACTORY.getCurrentSession();
+            transactional = session.beginTransaction();
             session.beginTransaction();
             Query query = session.createQuery("FROM User");
             List<User> users = query.list();
@@ -100,6 +106,7 @@ public class UserDaoHibernateImpl implements UserDao {
             return users;
 
         }catch (HibernateException e){
+            transactional.rollback();
             e.printStackTrace();
         }
 
@@ -109,14 +116,16 @@ public class UserDaoHibernateImpl implements UserDao {
     @Override
     public void cleanUsersTable() {
 
-        try {
+        try(Session session = SESSION_FACTORY.getCurrentSession()) {
 
-            Session session = SESSION_FACTORY.getCurrentSession();
+            transactional = session.beginTransaction();
             session.beginTransaction();
             session.createSQLQuery("TRUNCATE TABLE User").executeUpdate();
             session.getTransaction().commit();
 
-        }catch (Exception e){
+        }catch (HibernateException e){
+
+            transactional.rollback();
             e.printStackTrace();
         }
 
